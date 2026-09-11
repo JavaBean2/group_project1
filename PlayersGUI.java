@@ -30,7 +30,7 @@ public class PlayersGUI extends JPanel{
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new GridLayout(5, 1, 10, 10));
 
-        JButton btnViewAll = new JButton("1. View ALl Players");
+        JButton btnViewAll = new JButton("1. View All Players");
         JButton btnViewByUnit = new JButton("2. Filter Players by Unit");
         JButton btnSearch = new JButton("3. Search Player");
         JButton btnDetails = new JButton("4. View Player Profile");

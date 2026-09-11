@@ -8,7 +8,13 @@ public class CoachesGUI extends JPanel {
 
     private List<Coach> coachList;
 
-    public CoachesGUI() {
+    // Added for Main Menu Integration, holds the "go back" action passed in from MainMenu
+    private Runnable onBack;
+    
+    //Original - replaced for Main Menu integration:
+    // public CoachesGUI() {
+    public CoachesGUI(Runnable onBack) {
+        this.onBack = onBack;
         coachList = new ArrayList<>();
         loadCoachingStaff();
 
@@ -171,12 +177,14 @@ public class CoachesGUI extends JPanel {
 
     // 5. Back to Main Menu
     private void backToMainMenu() {
-        JOptionPane.showMessageDialog(
-                this,
-                "Returning to Main Menu... (Main Menu integration ready)",
-                "Navigation",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        // Original, replaced for Main Menu integration:
+        // JOptionPane.showMessageDialog(
+        //        this,
+        //        "Returning to Main Menu... (Main Menu integration ready)",
+        //        "Navigation",
+        //        JOptionPane.INFORMATION_MESSAGE
+        //);
+        onBack.run();
     }
 
     // Helper method to show long text neatly inside a scrollable box
@@ -208,7 +216,9 @@ public class CoachesGUI extends JPanel {
         JFrame frame = new JFrame("Indianapolis Colts - Coaches Module");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(500, 400);
-        frame.add(new CoachesGUI());
+        // ORIGINAL, replaced for Main Menu Integration (no - arg constructor no longer exists):
+        // frame.add(new CoachesGUI());
+        frame.add(new CoachesGUI(() -> System.out.println("Back button clicked (test mode)")));
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }

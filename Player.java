@@ -19,6 +19,10 @@ public class Player{
         this.unit = unit;
     } // <- closes the constructor
     
+
+    //--------Getters---------
+
+
     // Returns the name
     public String getName(){
         return name;
@@ -42,5 +46,42 @@ public class Player{
         "Jersey Number: " + jerseyNumber + "\n" +
         "Unit: " + unit + "\n";
     }
+
+        // ------------------ NEW FEATURES BELOW THIS LINE ------------------
+
+    // 1. toString() method
+    @Override
+    public String toString() {
+        return name + " (#" + jerseyNumber + ", " + position + ", " + unit + ")";
+    }
+
+    // 2. Setters (optional)
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public void setJerseyNumber(int jerseyNumber) {
+        this.jerseyNumber = jerseyNumber;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    // 3. Optional: simple validation
+    public void validate() {
+        if (jerseyNumber <= 0) {
+            throw new IllegalArgumentException("Jersey number must be positive.");
+        }
+    }
+
+    // 4. Optional: fun rating method
+    public int getPlayerRating() {
+        return (int)(Math.random() * 100);
+    }
     
-} // <- closes the class
+} 

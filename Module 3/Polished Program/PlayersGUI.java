@@ -2,12 +2,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 // Written by: Sarah Ayres - Built the entire Players GUI panel
 // Players section panel
 public class PlayersGUI extends JPanel{
     // Holds all the players
     private List<Player> playerList;
 
+    //Written by: Sarah Ayres - CSV file path for players section
+    private final String FILE_PATH ="players.csv";
     //code to run when "back to main menu" is clicked
     private Runnable onBack;
 
@@ -53,7 +61,10 @@ public class PlayersGUI extends JPanel{
         btnBack.addActionListener(e -> backToMainMenu());
     }
         // Loads a sample of the current Colts roster
-    private void loadPlayers() {
+    //private void loadPlayers() {
+    // Written by: Sarah Ayres - One-time seed data, used only to create players.csv if it's
+    // missing (e.g. first run). Every run after that reads from the file, not this method.
+    private void writeDefaultPlayerFile() {
         // Offense
         playerList.add(new Player("Daniel Jones", "Quarterback", 17, "Offense"));
         playerList.add(new Player("Anthony Richardson", "Quarterback", 5, "Offense"));
@@ -77,7 +88,76 @@ public class PlayersGUI extends JPanel{
         // Special Teams
         playerList.add(new Player("Spencer Shrader", "Kicker", 3, "Special Teams"));
         playerList.add(new Player("Rigoberto Sanchez", "Punter", 8, "Special Teams"));
+
+                savePlayers();
     }
+
+    // Written by: Sarah Ayres - Reads player data from players.csv (header row:
+    // Name,Position,JerseyNumber,Unit). If players.csv doesn't exist yet (first run),
+    // a default file is created from the seed roster above.
+    private void loadPlayers() {
+        java.io.File file = new java.io.File(FILE_PATH);
+        if (!file.exists()) {
+            writeDefaultPlayerFile();
+            return;
+        }
+
+        playerList.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+            String line;
+            boolean isHeader = true;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
+
+                String[] parts = line.split(",");
+                if (parts.length == 4) {
+                    String name = parts[0].trim();
+                    String position = parts[1].trim();
+                    int jerseyNumber = Integer.parseInt(parts[2].trim());
+                    String unit = parts[3].trim();
+
+                    playerList.add(new Player(name, position, jerseyNumber, unit));
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error reading players file (" + FILE_PATH + "): " + e.getMessage(),
+                "File Read Error",
+                JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error parsing jersey number in file.",
+                "Data Parse Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Written by: Sarah Ayres - Writes the current player list back out to players.csv
+    // with the header row.
+    private void savePlayers() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_PATH))) {
+            writer.println("Name,Position,JerseyNumber,Unit");
+            for (Player p : playerList) {
+                writer.println(p.getName() + "," +
+                               p.getPosition() + "," +
+                               p.getJerseyNumber() + "," +
+                               p.getUnit());
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error saving players file: " + e.getMessage(),
+                "File Save Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // Shows every player in the list
     private void viewAllPlayers(){
         StringBuilder builder = new StringBuilder();
@@ -169,6 +249,8 @@ public class PlayersGUI extends JPanel{
         }
     }
     private void backToMainMenu(){
+        // Written by: Sarah Ayres - Persist player list to players.csv before returning
+        savePlayers();
         onBack.run();
     }
         // Shows long text neatly inside a scrollable box

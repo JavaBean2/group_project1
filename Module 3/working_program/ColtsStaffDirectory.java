@@ -3,6 +3,15 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
 
 // Original, Replaced for Main Menu integration (needs to be a panel, not its own window):
 // public class ColtsStaffDirectory extends JFrame {
@@ -10,6 +19,9 @@ public class ColtsStaffDirectory extends JPanel {
     private final DefaultTableModel model;
     private final JTable table;
     private final JTextField searchField;
+
+    // Written by: Sarah Ayres - CSV file path for staff section read/write
+    private final String FILE_PATH = "staff.csv";
 
     // ADDED for main menu integration, holds the "go back" action passed in from MainMenu:
     private Runnable onBack;
@@ -24,6 +36,8 @@ public class ColtsStaffDirectory extends JPanel {
         // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // setLocationRelativeTo(null);
 
+        // Written by: David Irvin - Built the staff table using JTable, DefaultTableModel,
+        // and TableRowSorter to display and sort staff by Name, Position, and Department.
         model = new DefaultTableModel(
             new String[]{"Name", "Position", "Department"}, 0
         );
@@ -71,9 +85,13 @@ public class ColtsStaffDirectory extends JPanel {
         add(topPanel, BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        initializeStaffSlots();
+        // Written by: Sarah Ayres - load staff data from staff.csv instead of hardcoding it directly
+        loadStaffData();
+
+        //initializeStaffSlots();
     }
 
+    // Written by: David Irvin - Filters the staff table by search text using the table's row sorter.
     private void filter(TableRowSorter<DefaultTableModel> sorter) {
         String text = searchField.getText().trim();
 
@@ -84,6 +102,8 @@ public class ColtsStaffDirectory extends JPanel {
         }
     }
 
+    // Written by: David Irvin - Escapes regex special characters so search text is treated
+    // as a literal string rather than a regex pattern.
     private String escapeRegex(String text) {
         return text.replace("\\", "\\\\")
                    .replace(".", "\\.")
@@ -101,6 +121,8 @@ public class ColtsStaffDirectory extends JPanel {
                    .replace("|", "\\|");
     }
 
+    // Written by: David Irvin - Builds the "Add Staff Member" dialog and adds the entered
+    // name, position, and department to the table.
     private void showAddDialog() {
         JTextField nameField = new JTextField();
         JTextField positionField = new JTextField();
@@ -139,9 +161,14 @@ public class ColtsStaffDirectory extends JPanel {
                     positionField.getText().trim(),
                     departmentField.getText().trim()
             });
+
+            // Written by: Sarah Ayres - Presist new staff member to staff.csv immediately
+            saveStaffData();
         }
     }
 
+    // Written by: David Irvin - Deletes the selected staff row, with checks to prevent
+    // removing an empty selection or a department header row.
     private void deleteSelectedRow() {
         int selectedRow = table.getSelectedRow();
 
@@ -162,12 +189,20 @@ public class ColtsStaffDirectory extends JPanel {
             return;
         }
         model.removeRow(modelRow);
+
+        // Written by: Sarah Ayres - Persist the deletion to staff.csv immediately
+        saveStaffData();
     }
 
     /**
      * 
      */
-    private void initializeStaffSlots() {
+    //private void initializeStaffSlots() {
+    // Written by: Sarah Ayres - one time seed data, used only to create staff.csv if it's
+    // missing (e.g. first run). Every run after that reads from the file, not this array.
+    private void writeDefaultStaffFile () {
+
+        // Written by: David Irvin - Original staff roster data (names, positions, departments).
         Object[][] staffMembers = {
             {"Carlie Irsay-Gordon", "Owner & CEO", "Executives"},
             {"Casey Foyt", "Owner & Executive Vice President", "Executives"},
@@ -383,23 +418,142 @@ public class ColtsStaffDirectory extends JPanel {
             {"Blake Hermsen", "Video Assistant", "Video"}
         };
 
-        String currentDepartment = "";
-        for (int slot = 1; slot <= 211; slot++) {
-            if (slot <= staffMembers.length) {
-                String department = staffMembers[slot - 1][2].toString();
-                if (!department.equals(currentDepartment)) {
-                    model.addRow(new Object[]{"", "", department});
-                    currentDepartment = department;
+        //String currentDepartment = "";
+        //for (int slot = 1; slot <= 211; slot++) {
+            //if (slot <= staffMembers.length) {
+                //String department = staffMembers[slot - 1][2].toString();
+                //if (!department.equals(currentDepartment)) {
+                    //model.addRow(new Object[]{"", "", department});
+                    //currentDepartment = department;
+                //}
+                //model.addRow(staffMembers[slot - 1]);
+            //} else {
+                //model.addRow(new Object[]{
+                    //"Example Staff Member " + slot,
+                    //"Example Position " + slot,
+                    //"Example Department " + slot
+                //});
+            //}
+        //}
+    //}
+        try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_PATH))) {
+            writer.println("Name,Position,Department");
+            for (Object[] staffMember : staffMembers) {
+                writer.println(csvField(staffMember[0].toString()) + ","
+                        + csvField(staffMember[1].toString()) + ","
+                        + csvField(staffMember[2].toString()));
+            }
+                } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error creating default staff file: " + e.getMessage(),
+                "File Write Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Written by: Sarah Ayres - Reads staff data from staff.csv (header row: Name,Position,Department).
+    // Department header/divider rows are not stored in the file; they're rebuilt here from the
+    // Department column so the grouped table display still works after loading.
+    // If staff.csv doesn't exist yet (first run), a default file is created from the seed data above.
+    private void loadStaffData() {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) {
+            writeDefaultStaffFile();
+        }
+
+        List<Object[]> rows = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+            String line;
+            boolean isHeader = true;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) {
+                    continue;
                 }
-                model.addRow(staffMembers[slot - 1]);
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
+                String[] parts = parseCsvLine(line);
+                if (parts.length == 3) {
+                    rows.add(new Object[]{parts[0], parts[1], parts[2]});
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error reading staff file (" + FILE_PATH + "): " + e.getMessage(),
+                "File Read Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        model.setRowCount(0);
+        String currentDepartment = "";
+        for (Object[] row : rows) {
+            String department = row[2].toString();
+            if (!department.equals(currentDepartment)) {
+                model.addRow(new Object[]{"", "", department});
+                currentDepartment = department;
+            }
+            model.addRow(row);
+        }
+    }
+
+    // Written by: Sarah Ayres - Writes the current staff table back out to staff.csv.
+    // Department header/divider rows (blank name/position) are skipped since they're
+    // regenerated from the Department column on load, not stored data themselves.
+    public void saveStaffData() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_PATH))) {
+            writer.println("Name,Position,Department");
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String name = model.getValueAt(i, 0).toString();
+                if (name.isEmpty()) {
+                    continue;
+                }
+                String position = model.getValueAt(i, 1).toString();
+                String department = model.getValueAt(i, 2).toString();
+                writer.println(csvField(name) + "," + csvField(position) + "," + csvField(department));
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error saving staff file: " + e.getMessage(),
+                "File Save Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Written by: Sarah Ayres - Wraps a CSV field in quotes and escapes any quotes inside it.
+    // Needed because several staff titles/names contain commas (e.g. "G. Peter Maiers, MD"),
+    // which would otherwise be misread as extra columns.
+    private String csvField(String value) {
+        return "\"" + value.replace("\"", "\"\"") + "\"";
+    }
+
+    // Written by: Sarah Ayres - Splits one CSV line into fields, respecting quoted commas
+    // (the counterpart to csvField above).
+    private String[] parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    current.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == ',' && !inQuotes) {
+                fields.add(current.toString());
+                current.setLength(0);
             } else {
-                model.addRow(new Object[]{
-                    "Example Staff Member " + slot,
-                    "Example Position " + slot,
-                    "Example Department " + slot
-                });
+                current.append(c);
             }
         }
+        fields.add(current.toString());
+        return fields.toArray(new String[0]);
     }
 
     private void returnToMainMenu() {
@@ -409,6 +563,8 @@ public class ColtsStaffDirectory extends JPanel {
         onBack.run();
     }
 
+    // Written by: David Irvin - Custom table cell renderer that displays department
+    // header rows in blue/bold to visually separate groups in the staff table.
     private static class DepartmentHeaderRenderer extends DefaultTableCellRenderer {
         @Override
         public java.awt.Component getTableCellRendererComponent(

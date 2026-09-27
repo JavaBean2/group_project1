@@ -1,8 +1,15 @@
 import javax.swing.*;
 import java.awt.*;
 
+// Written by: Sarah Ayres - Built the entire Main Menu file
 // Main app window, hosts all section panels
 public class MainMenu extends JFrame {
+
+    //Card names - defined 
+    private static final String CARD_MENU = "Menu";
+    private static final String CARD_COACHES = "Coaches";
+    private static final String CARD_PLAYERS = "Players";
+    private static final String CARD_STAFF = "Staff";
 
     // Controls which panel is showing
     private CardLayout cardLayout;
@@ -13,7 +20,7 @@ public class MainMenu extends JFrame {
     // Builds the main window
     public MainMenu() {
         setTitle("Indianapolis Colts - Main Menu");
-        setSize(900,600);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -44,33 +51,33 @@ public class MainMenu extends JFrame {
         logoTextPanel.add(Box.createVerticalGlue());
 
         menuHomePanel.add(logoTextPanel, BorderLayout.CENTER);
-        // Register the home screen under "Menu"
-        cardContainer.add(menuHomePanel, "Menu");
+        // Register the home screen under CARD_MENU
+        cardContainer.add(menuHomePanel, CARD_MENU);
 
         // Create each section's panel
-        CoachesGUI coachesPanel = new CoachesGUI(() -> cardLayout.show(cardContainer, "Menu"));
-        PlayersGUI playersPanel = new PlayersGUI(() -> cardLayout.show(cardContainer, "Menu"));
-        ColtsStaffDirectory staffPanel = new ColtsStaffDirectory(() -> cardLayout.show(cardContainer, "Menu"));
+        CoachesGUI coachesPanel = new CoachesGUI(() -> cardLayout.show(cardContainer, CARD_MENU));
+        PlayersGUI playersPanel = new PlayersGUI(() -> cardLayout.show(cardContainer, CARD_MENU));
+        ColtsStaffDirectory staffPanel = new ColtsStaffDirectory(() -> cardLayout.show(cardContainer, CARD_MENU));
 
         // Register them with the card container under a name
-        cardContainer.add(coachesPanel, "COACHES");
-        cardContainer.add(playersPanel, "PLAYERS");
-        cardContainer.add(staffPanel, "STAFF");
-        cardLayout.show(cardContainer, "Menu");
+        cardContainer.add(coachesPanel, CARD_COACHES);
+        cardContainer.add(playersPanel, CARD_PLAYERS);
+        cardContainer.add(staffPanel, CARD_STAFF);
+        cardLayout.show(cardContainer, CARD_MENU);
 
         // Put the card container into the window
-        add(cardContainer);
+        add(cardContainer, BorderLayout.CENTER);
 
         // Build the menu bar of section buttons
         JPanel menuPanel = new JPanel();
-        JButton coachesButton = new JButton("Coaches");
-        JButton playersButton = new JButton("Players");
-        JButton staffButton = new JButton("Staff");
+        JButton coachesButton = new JButton(CARD_COACHES);
+        JButton playersButton = new JButton(CARD_PLAYERS);
+        JButton staffButton = new JButton(CARD_STAFF);
 
         // Switch cards when clicked
-        coachesButton.addActionListener(e -> cardLayout.show(cardContainer, "COACHES"));
-        playersButton.addActionListener(e -> cardLayout.show(cardContainer, "PLAYERS"));
-        staffButton.addActionListener(e -> cardLayout.show(cardContainer, "STAFF"));
+        coachesButton.addActionListener(e -> cardLayout.show(cardContainer, CARD_COACHES));
+        playersButton.addActionListener(e -> cardLayout.show(cardContainer, CARD_PLAYERS));
+        staffButton.addActionListener(e -> cardLayout.show(cardContainer, CARD_STAFF));
 
         menuPanel.add(coachesButton);
         menuPanel.add(playersButton);
@@ -80,12 +87,12 @@ public class MainMenu extends JFrame {
         add(menuPanel, BorderLayout.NORTH);
 
 
-    }  // <- closes the constructor
+    }
 
     // Entry point, starts the app
     public static void main(String[] args){
         MainMenu menu = new MainMenu();
         menu.setVisible(true);
     }
-}  // <- closes the class
+}  
 
